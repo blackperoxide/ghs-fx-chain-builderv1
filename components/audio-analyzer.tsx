@@ -1,4 +1,5 @@
 "use client"
+import type { ReactElement } from "react"
 
 import { useState, useRef, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -13,7 +14,7 @@ import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Toolti
 import { interpretAnalysis, severityRank, type AudioAnalysisResult, type Finding } from "@/lib/audio-interpretation"
 import { genreProfiles, defaultGenreProfile } from "@/lib/genre-profiles"
 
-const severityStyle: Record<string, { badge: string; icon: JSX.Element }> = {
+const severityStyle: Record<string, { badge: string; icon: ReactElement }> = {
   problem: { badge: "bg-red-600 text-white hover:bg-red-600", icon: <AlertCircle className="h-4 w-4" /> },
   watch: { badge: "bg-amber-500 text-white hover:bg-amber-500", icon: <AlertTriangle className="h-4 w-4" /> },
   good: { badge: "bg-emerald-600 text-white hover:bg-emerald-600", icon: <CheckCircle className="h-4 w-4" /> },

@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Upload, Loader2, AlertTriangle, CheckCircle, Target, ArrowRightLeft } from "lucide-react"
+import type { ReactElement } from "react"
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Tooltip, Legend } from "recharts"
 import type { AudioAnalysisResult } from "@/lib/audio-interpretation"
 import { compareAnalyses, abSeverityRank, type AbFinding, type AbSeverity } from "@/lib/ab-compare"
 
-const severityStyle: Record<AbSeverity, { badge: string; icon: JSX.Element }> = {
+const severityStyle: Record<AbSeverity, { badge: string; icon: ReactElement }> = {
   priority: { badge: "bg-red-600 text-white hover:bg-red-600", icon: <AlertTriangle className="h-4 w-4" /> },
   notable: { badge: "bg-amber-500 text-white hover:bg-amber-500", icon: <Target className="h-4 w-4" /> },
   match: { badge: "bg-emerald-600 text-white hover:bg-emerald-600", icon: <CheckCircle className="h-4 w-4" /> },
