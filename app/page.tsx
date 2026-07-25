@@ -12,10 +12,15 @@ import { AudioAbCompare } from "@/components/audio-ab-compare"
 import { DawPromptOutput } from "@/components/daw-prompt-output"
 import { CompositionPromptsPanel } from "@/components/composition-prompts-panel"
 import { Button } from "@/components/ui/button"
-import { Music, Mic, Download, ChevronDown, ChevronUp, Zap, Map, Sliders, Activity, Layers } from "lucide-react"
+import {
+  Music, Mic, Download, ChevronDown, ChevronUp, Zap, Map, Sliders, Activity, Layers,
+  Guitar, Piano, Shuffle,
+} from "lucide-react"
 import { cn } from "@/lib/utils"
-import { vibes, drumBusChain, type Vibe } from "@/lib/chain-data"
-import { ovoToledoVocalChain } from "@/lib/vocal-chain-data"
+import { vibes, drumBusChain, glitchGap, type Vibe, type ChainStage } from "@/lib/chain-data"
+import { bassChain, bassGap } from "@/lib/bass-chain-data"
+import { keysChain, keysGap } from "@/lib/keys-chain-data"
+import { ovoToledoVocalChain, vocalGap } from "@/lib/vocal-chain-data"
 import type { MatchResult, TrackType } from "@/lib/prompt-match"
 import type { LibraryIndex } from "@/lib/plugin-library"
 
@@ -45,8 +50,18 @@ export default function Home() {
     setTrackType(t)
     setHighlightedStages([])
   }
+  function surpriseMe() {
+    const instruments: TrackType[] = ["drums", "bass", "keys", "vocals"]
+    const t = instruments[Math.floor(Math.random() * instruments.length)]
+    const v = vibes[Math.floor(Math.random() * vibes.length)].id
+    setTrackType(t)
+    setVibe(v)
+    setHighlightedStages([])
+    setHasMatched(false)
+    setShowFullDetails(true)
+  }
 
-  const { chainKey, chainLabel, suggestedPresetName, checklistStages } = useMemo(() => {
+  const { chainKey, chainLabel, suggestedPresetName, checklistStages, chainData, gapNote } = useMemo(() => {
     if (trackType === "vocals") {
       const stages: ChecklistStage[] = ovoToledoVocalChain.map((s) => ({
         id: s.id,
@@ -61,20 +76,29 @@ export default function Home() {
         chainLabel: "OVO / Toledo Vocal Chain",
         suggestedPresetName: "GHS - OVO Toledo Vocal",
         checklistStages: stages,
+        chainData: null as Record<Vibe, ChainStage[]> | null,
+        gapNote: vocalGap,
       }
     }
+
     const vibeMeta = vibes.find((v) => v.id === vibe)
-    const stages: ChecklistStage[] = drumBusChain[vibe].map((s) => ({
+    const dataMap = trackType === "bass" ? bassChain : trackType === "keys" ? keysChain : drumBusChain
+    const gap = trackType === "bass" ? bassGap : trackType === "keys" ? keysGap : glitchGap
+    const instrumentLabel = trackType === "bass" ? "Bass" : trackType === "keys" ? "Keys" : "Drum Bus"
+
+    const stages: ChecklistStage[] = dataMap[vibe].map((s) => ({
       id: s.id,
       name: s.name,
       pluginLine: s.options.map((o) => `${o.brand}: ${o.plugin}`).join("  |  "),
       tip: s.options[0]?.tip ?? "",
     }))
     return {
-      chainKey: `drums:${vibe}`,
-      chainLabel: `${vibeMeta?.label ?? vibe} Drum Bus`,
-      suggestedPresetName: `GHS - ${vibeMeta?.label ?? vibe} Drum Bus`,
+      chainKey: `${trackType}:${vibe}`,
+      chainLabel: `${vibeMeta?.label ?? vibe} ${instrumentLabel}`,
+      suggestedPresetName: `GHS - ${vibeMeta?.label ?? vibe} ${instrumentLabel}`,
       checklistStages: stages,
+      chainData: dataMap,
+      gapNote: gap,
     }
   }, [trackType, vibe])
 
@@ -129,7 +153,8 @@ export default function Home() {
             </div>
           </div>
         </div>
-        <div className="flex gap-2 pt-2">
+
+        <div className="flex gap-2 pt-2 flex-wrap items-center">
           <Button
             variant={trackType === "drums" ? "default" : "outline"}
             onClick={() => handleTrackTypeChange("drums")}
@@ -138,17 +163,38 @@ export default function Home() {
             <Music className="h-4 w-4" /> Drums
           </Button>
           <Button
+            variant={trackType === "bass" ? "default" : "outline"}
+            onClick={() => handleTrackTypeChange("bass")}
+            className={cn("gap-2")}
+          >
+            <Guitar className="h-4 w-4" /> Bass
+          </Button>
+          <Button
+            variant={trackType === "keys" ? "default" : "outline"}
+            onClick={() => handleTrackTypeChange("keys")}
+            className={cn("gap-2")}
+          >
+            <Piano className="h-4 w-4" /> Keys
+          </Button>
+          <Button
             variant={trackType === "vocals" ? "default" : "outline"}
             onClick={() => handleTrackTypeChange("vocals")}
             className={cn("gap-2")}
           >
             <Mic className="h-4 w-4" /> Vocals
           </Button>
+          <Button
+            variant="outline"
+            onClick={surpriseMe}
+            className="gap-2 border-fuchsia-500/50 text-fuchsia-600 hover:bg-fuchsia-500/10 ml-auto"
+          >
+            <Shuffle className="h-4 w-4" /> Random Ideas — surprise me
+          </Button>
         </div>
       </div>
+
       <div className="max-w-4xl mx-auto px-6 pb-16 space-y-6">
-        {/* Primary flow: describe -> match -> active cue. This is the one path
-            everyone should land on first. */}
+        {/* Primary flow: describe -> match -> active cue. */}
         <PromptBuilder onMatch={handleMatch} />
         {hasMatched && <CompositionPromptsPanel vibe={vibe} />}
         {hasMatched && <DawPromptOutput vibe={vibe} trackType={trackType} rawPrompt={lastPromptText} />}
@@ -159,8 +205,7 @@ export default function Home() {
           stages={checklistStages}
         />
 
-        {/* Secondary tools: opt-in, not shown by default, so the home page
-            doesn't open with four competing tools at once. */}
+        {/* Secondary tools: opt-in, not shown by default. */}
         <Button
           variant="ghost"
           onClick={() => setShowAnalyzer((v) => !v)}
@@ -192,7 +237,7 @@ export default function Home() {
         {showFullDetails && (
           <div className="space-y-6">
             <PluginLibraryPanel onLibraryChange={setLibraryIndex} />
-            
+            <a
               href="/plugin-scanner.zip"
               download
               className="flex items-center gap-2 text-sm text-primary hover:underline w-fit"
@@ -206,15 +251,19 @@ export default function Home() {
               suggestedPresetName={suggestedPresetName}
               stages={checklistStages}
             />
-            {trackType === "drums" ? (
-              <ChainViewer
-                vibe={vibe}
-                onVibeChange={handleVibeChange}
-                highlightedStages={highlightedStages}
-                libraryIndex={libraryIndex}
-              />
-            ) : (
+            {trackType === "vocals" ? (
               <VocalChainViewer highlightedStages={highlightedStages} libraryIndex={libraryIndex} />
+            ) : (
+              chainData && (
+                <ChainViewer
+                  vibe={vibe}
+                  onVibeChange={handleVibeChange}
+                  highlightedStages={highlightedStages}
+                  libraryIndex={libraryIndex}
+                  chainData={chainData}
+                  gapNote={gapNote}
+                />
+              )
             )}
           </div>
         )}
