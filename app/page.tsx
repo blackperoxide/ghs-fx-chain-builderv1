@@ -1,5 +1,4 @@
 "use client"
-
 import { useState, useMemo } from "react"
 import Link from "next/link"
 import { ChainViewer } from "@/components/chain-viewer"
@@ -26,6 +25,8 @@ export default function Home() {
   const [highlightedStages, setHighlightedStages] = useState<string[]>([])
   const [libraryIndex, setLibraryIndex] = useState<LibraryIndex | null>(null)
   const [showFullDetails, setShowFullDetails] = useState(false)
+  const [showAnalyzer, setShowAnalyzer] = useState(false)
+  const [showAbCompare, setShowAbCompare] = useState(false)
   const [lastPromptText, setLastPromptText] = useState("")
   const [hasMatched, setHasMatched] = useState(false)
 
@@ -36,12 +37,10 @@ export default function Home() {
     setLastPromptText(promptText)
     setHasMatched(true)
   }
-
   function handleVibeChange(v: Vibe) {
     setVibe(v)
     setHighlightedStages([])
   }
-
   function handleTrackTypeChange(t: TrackType) {
     setTrackType(t)
     setHighlightedStages([])
@@ -148,22 +147,39 @@ export default function Home() {
         </div>
       </div>
       <div className="max-w-4xl mx-auto px-6 pb-16 space-y-6">
-        <AudioAnalyzer />
-
-        <AudioAbCompare />
-
+        {/* Primary flow: describe -> match -> active cue. This is the one path
+            everyone should land on first. */}
         <PromptBuilder onMatch={handleMatch} />
-
         {hasMatched && <CompositionPromptsPanel vibe={vibe} />}
-
         {hasMatched && <DawPromptOutput vibe={vibe} trackType={trackType} rawPrompt={lastPromptText} />}
-
         <FocusCue
           chainKey={chainKey}
           chainLabel={chainLabel}
           suggestedPresetName={suggestedPresetName}
           stages={checklistStages}
         />
+
+        {/* Secondary tools: opt-in, not shown by default, so the home page
+            doesn't open with four competing tools at once. */}
+        <Button
+          variant="ghost"
+          onClick={() => setShowAnalyzer((v) => !v)}
+          className="gap-2 text-muted-foreground w-full justify-center"
+        >
+          {showAnalyzer ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          {showAnalyzer ? "Hide mix analyzer" : "Analyze a mix (loudness, dynamics, muddiness)"}
+        </Button>
+        {showAnalyzer && <AudioAnalyzer />}
+
+        <Button
+          variant="ghost"
+          onClick={() => setShowAbCompare((v) => !v)}
+          className="gap-2 text-muted-foreground w-full justify-center"
+        >
+          {showAbCompare ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          {showAbCompare ? "Hide A/B compare" : "Compare your track against a reference"}
+        </Button>
+        {showAbCompare && <AudioAbCompare />}
 
         <Button
           variant="ghost"
@@ -173,12 +189,10 @@ export default function Home() {
           {showFullDetails ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           {showFullDetails ? "Hide full chain details" : "Show full chain details (all steps, all plugin options)"}
         </Button>
-
         {showFullDetails && (
           <div className="space-y-6">
             <PluginLibraryPanel onLibraryChange={setLibraryIndex} />
-
-            <a
+            
               href="/plugin-scanner.zip"
               download
               className="flex items-center gap-2 text-sm text-primary hover:underline w-fit"
@@ -186,14 +200,12 @@ export default function Home() {
               <Download className="h-4 w-4" />
               Download the local plugin scanner script (Mac + Windows)
             </a>
-
             <BuildChecklist
               chainKey={chainKey}
               chainLabel={chainLabel}
               suggestedPresetName={suggestedPresetName}
               stages={checklistStages}
             />
-
             {trackType === "drums" ? (
               <ChainViewer
                 vibe={vibe}
