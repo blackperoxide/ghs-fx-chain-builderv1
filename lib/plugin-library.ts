@@ -50,7 +50,7 @@ const curated: Record<string, Category> = {
   // UAD — saturation/tape/drive
   "studer a800": "saturation", "ampex atr": "saturation", "oxide tape": "saturation",
   "galaxy tape echo": "delay", "thermionic culture vulture": "saturation", "century tube": "saturation",
-  "raw" : "saturation", "oxford inflator": "saturation", "vertigo": "saturation",
+  "oxford inflator": "saturation", "vertigo": "saturation",
   "black box hg": "saturation", "brigade chorus": "modulation",
   // UAD — amp/DI
   "ampeg": "amp", "little labs vog": "amp", "little labs ibp2": "amp", fender: "amp",
