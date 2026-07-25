@@ -1,24 +1,30 @@
 "use client"
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Info, Zap, FolderOpen } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { vibes, drumBusChain, glitchGap, type Vibe } from "@/lib/chain-data"
+import { vibes, type Vibe, type ChainStage } from "@/lib/chain-data"
 import { stageCategoryMap } from "@/lib/stage-category-map"
 import { getBrandColor } from "@/lib/brand-colors"
-import type { LibraryIndex } from "@/lib/plugin-library"
+import { logicStockFallback, type LibraryIndex } from "@/lib/plugin-library"
+
+interface GapNote {
+  title: string
+  body: string
+}
 
 interface ChainViewerProps {
   vibe: Vibe
   onVibeChange: (v: Vibe) => void
   highlightedStages?: string[]
   libraryIndex?: LibraryIndex | null
+  chainData: Record<Vibe, ChainStage[]>
+  gapNote?: GapNote
 }
 
-export function ChainViewer({ vibe, onVibeChange, highlightedStages = [], libraryIndex }: ChainViewerProps) {
+export function ChainViewer({ vibe, onVibeChange, highlightedStages = [], libraryIndex, chainData, gapNote }: ChainViewerProps) {
   return (
     <div className="space-y-6">
       <Tabs value={vibe} onValueChange={(v) => onVibeChange(v as Vibe)}>
@@ -34,13 +40,13 @@ export function ChainViewer({ vibe, onVibeChange, highlightedStages = [], librar
             </TabsTrigger>
           ))}
         </TabsList>
-
         {vibes.map((v) => (
           <TabsContent key={v.id} value={v.id} className="mt-6 space-y-4">
-            {drumBusChain[v.id].map((stage) => {
+            {chainData[v.id].map((stage) => {
               const isHighlighted = highlightedStages.includes(stage.id)
               const category = stageCategoryMap[stage.id]
               const libraryMatches = libraryIndex && category ? libraryIndex[category] : []
+              const stockFallback = category ? logicStockFallback[category] : null
               return (
                 <Card
                   key={stage.id}
@@ -87,6 +93,15 @@ export function ChainViewer({ vibe, onVibeChange, highlightedStages = [], librar
                         <p className="text-sm text-muted-foreground">{opt.tip}</p>
                       </div>
                     ))}
+                    {(!libraryMatches || libraryMatches.length === 0) && stockFallback && stockFallback.plugin !== "—" && (
+                      <div className="rounded-lg border border-dashed p-3 space-y-1 bg-muted/30">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">Logic Pro (stock, always available)</Badge>
+                          <span className="font-medium text-sm">{stockFallback.plugin}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{stockFallback.tip}</p>
+                      </div>
+                    )}
                     {stage.note && (
                       <Alert>
                         <Info className="h-4 w-4" />
@@ -100,12 +115,13 @@ export function ChainViewer({ vibe, onVibeChange, highlightedStages = [], librar
           </TabsContent>
         ))}
       </Tabs>
-
-      <Alert className="border-emerald-500/50">
-        <Zap className="h-4 w-4" />
-        <AlertTitle>{glitchGap.title}</AlertTitle>
-        <AlertDescription className="text-sm">{glitchGap.body}</AlertDescription>
-      </Alert>
+      {gapNote && (
+        <Alert className="border-emerald-500/50">
+          <Zap className="h-4 w-4" />
+          <AlertTitle>{gapNote.title}</AlertTitle>
+          <AlertDescription className="text-sm">{gapNote.body}</AlertDescription>
+        </Alert>
+      )}
     </div>
   )
 }
