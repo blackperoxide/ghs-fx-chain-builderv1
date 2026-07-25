@@ -1,6 +1,6 @@
 import type { Vibe } from "./chain-data"
 
-export type TrackType = "drums" | "vocals"
+export type TrackType = "drums" | "bass" | "keys" | "vocals"
 
 // Keyword weights per vibe — matched as whole-word/phrase hits against the user's free-text description.
 export const vibeKeywords: Record<Vibe, string[]> = {
@@ -49,11 +49,25 @@ export const stageKeywords: Record<string, string[]> = {
   "space-vocal": ["reverb", "space", "room", "hall"],
 }
 
-// Vocal-request detection — if enough of these appear, switch track type to vocals automatically.
+// Instrument-detection keywords — checked in this order (vocals -> bass -> keys),
+// falling back to drums if nothing matches.
 const vocalTrackKeywords = [
   "vocal", "vocals", "vox", "voice", "ovo", "toledo", "desync", "desynced",
   "double-tracked", "double tracked", "singer", "singing", "lyric", "lyrics",
 ]
+const bassTrackKeywords = [
+  "bass", "sub", "low end", "808", "bassline", "bass line", "bass guitar", "di bass", "fingerstyle",
+]
+const keysTrackKeywords = [
+  "keys", "rhodes", "piano", "synth", "pad", "chords", "electric piano", "wurlitzer", "wurly", "organ",
+]
+
+function detectTrackType(text: string): TrackType {
+  if (vocalTrackKeywords.some((kw) => text.includes(kw))) return "vocals"
+  if (bassTrackKeywords.some((kw) => text.includes(kw))) return "bass"
+  if (keysTrackKeywords.some((kw) => text.includes(kw))) return "keys"
+  return "drums"
+}
 
 export interface MatchResult {
   trackType: TrackType
@@ -65,13 +79,11 @@ export interface MatchResult {
 
 export function matchPromptToChain(input: string): MatchResult {
   const text = input.toLowerCase()
-
-  const trackType: TrackType = vocalTrackKeywords.some((kw) => text.includes(kw)) ? "vocals" : "drums"
+  const trackType: TrackType = detectTrackType(text)
 
   let bestVibe: Vibe = "psych-trip-hop"
   let bestScore = -1
   let bestMatched: string[] = []
-
   ;(Object.keys(vibeKeywords) as Vibe[]).forEach((vibe) => {
     const matched = vibeKeywords[vibe].filter((kw) => text.includes(kw))
     const score = matched.length
