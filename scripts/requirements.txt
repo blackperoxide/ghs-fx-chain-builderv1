@@ -1,0 +1,5 @@
+numpy
+librosa
+pyloudnorm
+soundfile
+basic-pitch[onnx]
