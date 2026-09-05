@@ -108,12 +108,25 @@ export function categorize(pluginName: string): Category {
   return "other"
 }
 
+const PLUGIN_FILE_EXTENSIONS = /\.(vst3|component|vst|aaxplugin|dll)$/i
+
+// Some scan tools (Logic's plugin manager, older exports) list a plugin as
+// "Name" on one line and its full install path on the next. A raw path line
+// isn't a second plugin - reduce it to the same bare name as its sibling line
+// so the two collapse into one entry instead of showing the filesystem path
+// as its own ugly "plugin".
+function toPluginName(line: string): string {
+  if (!/[/\\]/.test(line)) return line
+  const base = line.split(/[/\\]/).pop() ?? line
+  return base.replace(PLUGIN_FILE_EXTENSIONS, "")
+}
+
 export function parsePluginList(raw: string): string[] {
   return Array.from(
     new Set(
       raw
         .split(/\r?\n|,/)
-        .map((s) => s.trim())
+        .map((s) => toPluginName(s.trim()))
         .filter(Boolean)
     )
   )
