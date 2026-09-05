@@ -7,12 +7,15 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
+import { Slider } from "@/components/ui/slider"
 import { ArrowLeft, Upload, Loader2, AlertTriangle, Copy, Layers, Plus, Trash, Info, Mic2, Music, Download } from "lucide-react"
 import { vibes, type Vibe } from "@/lib/chain-data"
 import type { AudioAnalysisResult } from "@/lib/audio-interpretation"
 import { buildDawPrompts } from "@/lib/daw-prompts"
 import { stemRoleMeta, stemRoleToInstrumentRole, type StemRole } from "@/lib/stem-roles"
 import { vocalTuningRecs } from "@/lib/vocal-tuning-recs"
+import { transposeMidi } from "@/lib/midi-transpose"
 
 const MAX_STEMS = 6
 
@@ -37,6 +40,7 @@ interface StemEntry {
   transcribeError: string | null
   notes: TranscribedNote[] | null
   midiBase64: string | null
+  midiSemitones: number
 }
 
 let nextId = 0
@@ -55,6 +59,7 @@ function makeStem(role: StemRole): StemEntry {
     transcribeError: null,
     notes: null,
     midiBase64: null,
+    midiSemitones: 0,
   }
 }
 
@@ -98,11 +103,24 @@ function VocalTuningBlock() {
   )
 }
 
-function downloadMidi(base64: string, filename: string) {
+const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+function midiNoteName(pitch: number): string {
+  const clamped = Math.min(127, Math.max(0, pitch))
+  const octave = Math.floor(clamped / 12) - 1
+  return `${NOTE_NAMES[clamped % 12]}${octave}`
+}
+
+function decodeMidiBase64(base64: string): Uint8Array {
   const binary = atob(base64)
   const bytes = new Uint8Array(binary.length)
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
-  const blob = new Blob([bytes], { type: "audio/midi" })
+  return bytes
+}
+
+function downloadMidi(base64: string, filename: string, semitones: number) {
+  const bytes = decodeMidiBase64(base64)
+  const shifted = semitones === 0 ? bytes : transposeMidi(bytes, semitones)
+  const blob = new Blob([shifted as BlobPart], { type: "audio/midi" })
   const url = URL.createObjectURL(blob)
   const a = document.createElement("a")
   a.href = url
@@ -139,6 +157,7 @@ export default function ReverseEngineerPage() {
       result: null,
       notes: null,
       midiBase64: null,
+      midiSemitones: 0,
       transcribeError: null,
     })
     try {
@@ -158,7 +177,7 @@ export default function ReverseEngineerPage() {
 
   async function transcribe(stem: StemEntry) {
     if (!stem.file) return
-    updateStem(stem.id, { transcribing: true, transcribeError: null, notes: null, midiBase64: null })
+    updateStem(stem.id, { transcribing: true, transcribeError: null, notes: null, midiBase64: null, midiSemitones: 0 })
     try {
       const formData = new FormData()
       formData.append("file", stem.file)
@@ -349,9 +368,30 @@ export default function ReverseEngineerPage() {
                       <span className="text-sm font-medium">
                         {stem.notes.length} notes transcribed
                       </span>
+                    </div>
+
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <Label className="text-xs whitespace-nowrap">
+                        Transpose:{" "}
+                        {stem.midiSemitones === 0
+                          ? "no shift"
+                          : `${stem.midiSemitones > 0 ? "+" : ""}${stem.midiSemitones} semitone${Math.abs(stem.midiSemitones) === 1 ? "" : "s"}`}
+                      </Label>
+                      <Slider
+                        className="max-w-[180px]"
+                        value={[stem.midiSemitones]}
+                        onValueChange={([v]) => updateStem(stem.id, { midiSemitones: v })}
+                        min={-24}
+                        max={24}
+                        step={1}
+                      />
                       <Button
                         size="sm"
-                        onClick={() => downloadMidi(stem.midiBase64!, `${stem.role}-transcribed.mid`)}
+                        onClick={() => {
+                          const sign = stem.midiSemitones >= 0 ? "+" : ""
+                          const suffix = stem.midiSemitones !== 0 ? `-${sign}${stem.midiSemitones}st` : ""
+                          downloadMidi(stem.midiBase64!, `${stem.role}-transcribed${suffix}.mid`, stem.midiSemitones)
+                        }}
                         className="gap-1.5"
                       >
                         <Download className="h-3.5 w-3.5" /> Download .mid
@@ -360,7 +400,9 @@ export default function ReverseEngineerPage() {
                     <div className="max-h-40 overflow-y-auto text-xs font-mono bg-background rounded p-2 space-y-0.5">
                       {stem.notes.slice(0, 40).map((n, i) => (
                         <div key={i} className="text-muted-foreground">
-                          {n.start_sec.toFixed(2)}s — {n.note_name} (conf {(n.confidence * 100).toFixed(0)}%)
+                          {n.start_sec.toFixed(2)}s —{" "}
+                          {stem.midiSemitones !== 0 ? midiNoteName(n.pitch_midi + stem.midiSemitones) : n.note_name}{" "}
+                          (conf {(n.confidence * 100).toFixed(0)}%)
                         </div>
                       ))}
                       {stem.notes.length > 40 && (

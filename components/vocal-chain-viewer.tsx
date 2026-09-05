@@ -2,12 +2,14 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Info, Zap, Mic, FolderOpen } from "lucide-react"
+import { PluginOptionCard } from "@/components/plugin-option-card"
+import { Info, Zap, Mic, FolderOpen, Download } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { ovoToledoVocalChain, vocalGap } from "@/lib/vocal-chain-data"
 import { stageCategoryMap } from "@/lib/stage-category-map"
-import { getBrandColor } from "@/lib/brand-colors"
+import { buildRecipe, downloadRecipe } from "@/lib/recipe-export"
 import type { LibraryIndex } from "@/lib/plugin-library"
 
 export function VocalChainViewer({
@@ -19,6 +21,16 @@ export function VocalChainViewer({
 }) {
   return (
     <div className="space-y-4">
+      <Button
+        variant="outline"
+        size="sm"
+        className="gap-2"
+        onClick={() => downloadRecipe(buildRecipe("OVO Toledo Vocal Chain", ovoToledoVocalChain))}
+      >
+        <Download className="h-4 w-4" />
+        Download for GHS FX Companion
+      </Button>
+
       <Alert className="border-primary/40">
         <Mic className="h-4 w-4" />
         <AlertTitle>OVO / Toledo Reference Chain</AlertTitle>
@@ -68,15 +80,7 @@ export function VocalChainViewer({
                 </div>
               )}
               {stage.options.map((opt) => (
-                <div key={opt.plugin} className="rounded-lg border p-3 space-y-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Badge className={`${getBrandColor(opt.brand)} text-white hover:${getBrandColor(opt.brand)}`}>
-                      {opt.brand}
-                    </Badge>
-                    <span className="font-medium">{opt.plugin}</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">{opt.tip}</p>
-                </div>
+                <PluginOptionCard key={opt.plugin} option={opt} category={category} />
               ))}
               {stage.note && (
                 <Alert>
