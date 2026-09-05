@@ -86,7 +86,11 @@ export function ChainViewer({ vibe, chainData, instrumentLabel, highlightedStage
                     </div>
                     <div className="flex flex-wrap gap-1">
                       {libraryMatches.map((p) => (
-                        <Badge key={p} className="bg-emerald-600 text-white hover:bg-emerald-600">
+                        <Badge
+                          key={p}
+                          title={p}
+                          className="bg-emerald-600 text-white hover:bg-emerald-600 max-w-[65vw] sm:max-w-[220px] truncate"
+                        >
                           {p}
                         </Badge>
                       ))}
