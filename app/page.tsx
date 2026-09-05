@@ -1,8 +1,10 @@
 "use client"
+
 import { useState, useMemo } from "react"
 import Link from "next/link"
 import { ChainViewer } from "@/components/chain-viewer"
 import { VocalChainViewer } from "@/components/vocal-chain-viewer"
+import { VibePicker } from "@/components/vibe-picker"
 import { PromptBuilder } from "@/components/prompt-builder"
 import { PluginLibraryPanel } from "@/components/plugin-library-panel"
 import { BuildChecklist, type ChecklistStage } from "@/components/build-checklist"
@@ -12,56 +14,64 @@ import { AudioAbCompare } from "@/components/audio-ab-compare"
 import { DawPromptOutput } from "@/components/daw-prompt-output"
 import { CompositionPromptsPanel } from "@/components/composition-prompts-panel"
 import { Button } from "@/components/ui/button"
-import {
-  Music, Mic, Download, ChevronDown, ChevronUp, Zap, Map, Sliders, Activity, Layers,
-  Guitar, Piano, Shuffle,
-} from "lucide-react"
+import { Music, Mic, Guitar, Piano, Download, ChevronDown, ChevronUp, Zap, Map, Sliders, Activity, Layers } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { vibes, drumBusChain, glitchGap, type Vibe, type ChainStage } from "@/lib/chain-data"
-import { bassChain, bassGap } from "@/lib/bass-chain-data"
-import { keysChain, keysGap } from "@/lib/keys-chain-data"
-import { ovoToledoVocalChain, vocalGap } from "@/lib/vocal-chain-data"
+import { vibes, drumBusChain, type ChainStage, type Vibe } from "@/lib/chain-data"
+import { bassChain } from "@/lib/bass-chain-data"
+import { keysChain } from "@/lib/keys-chain-data"
+import { ovoToledoVocalChain } from "@/lib/vocal-chain-data"
 import type { MatchResult, TrackType } from "@/lib/prompt-match"
 import type { LibraryIndex } from "@/lib/plugin-library"
+import type { AxisScores } from "@/lib/chain-axes"
+import { buildDrumChain } from "@/lib/drum-chain-variants"
+
+const nonVocalChains: Record<"drums" | "bass" | "keys", { data: Record<Vibe, ChainStage[]>; label: string }> = {
+  drums: { data: drumBusChain, label: "Drum Bus" },
+  bass: { data: bassChain, label: "Bass" },
+  keys: { data: keysChain, label: "Keys" },
+}
 
 export default function Home() {
   const [trackType, setTrackType] = useState<TrackType>("drums")
   const [vibe, setVibe] = useState<Vibe>("psych-trip-hop")
+  const [axes, setAxes] = useState<AxisScores | null>(null)
   const [highlightedStages, setHighlightedStages] = useState<string[]>([])
   const [libraryIndex, setLibraryIndex] = useState<LibraryIndex | null>(null)
   const [showFullDetails, setShowFullDetails] = useState(false)
-  const [showAnalyzer, setShowAnalyzer] = useState(false)
-  const [showAbCompare, setShowAbCompare] = useState(false)
   const [lastPromptText, setLastPromptText] = useState("")
   const [hasMatched, setHasMatched] = useState(false)
 
   function handleMatch(result: MatchResult, promptText: string) {
     setTrackType(result.trackType)
     setVibe(result.vibe)
+    setAxes(result.axes)
     setHighlightedStages(result.highlightedStages)
     setLastPromptText(promptText)
     setHasMatched(true)
   }
+
   function handleVibeChange(v: Vibe) {
     setVibe(v)
+    setAxes(null) // picking a preset directly shows that preset's exact original chain, not a stale axis blend
     setHighlightedStages([])
-  }
-  function handleTrackTypeChange(t: TrackType) {
-    setTrackType(t)
-    setHighlightedStages([])
-  }
-  function surpriseMe() {
-    const instruments: TrackType[] = ["drums", "bass", "keys", "vocals"]
-    const t = instruments[Math.floor(Math.random() * instruments.length)]
-    const v = vibes[Math.floor(Math.random() * vibes.length)].id
-    setTrackType(t)
-    setVibe(v)
-    setHighlightedStages([])
-    setHasMatched(false)
-    setShowFullDetails(true)
   }
 
-  const { chainKey, chainLabel, suggestedPresetName, checklistStages, chainData, gapNote } = useMemo(() => {
+  function handleTrackTypeChange(t: TrackType) {
+    setTrackType(t)
+    setAxes(null)
+    setHighlightedStages([])
+  }
+
+  // Only wired up for Drums so far - a free-text prompt lands anywhere in the
+  // 7-axis space (lib/chain-axes.ts) instead of snapping to one of the 5
+  // hand-written vibes; picking a vibe preset directly (setAxes(null)) always
+  // shows that vibe's exact original chain.
+  const axisDrumStages = useMemo(
+    () => (trackType === "drums" && axes ? buildDrumChain(axes) : null),
+    [trackType, axes]
+  )
+
+  const { chainKey, chainLabel, suggestedPresetName, checklistStages } = useMemo(() => {
     if (trackType === "vocals") {
       const stages: ChecklistStage[] = ovoToledoVocalChain.map((s) => ({
         id: s.id,
@@ -76,31 +86,25 @@ export default function Home() {
         chainLabel: "OVO / Toledo Vocal Chain",
         suggestedPresetName: "GHS - OVO Toledo Vocal",
         checklistStages: stages,
-        chainData: null as Record<Vibe, ChainStage[]> | null,
-        gapNote: vocalGap,
       }
     }
-
+    const { data, label } = nonVocalChains[trackType as "drums" | "bass" | "keys"]
     const vibeMeta = vibes.find((v) => v.id === vibe)
-    const dataMap = trackType === "bass" ? bassChain : trackType === "keys" ? keysChain : drumBusChain
-    const gap = trackType === "bass" ? bassGap : trackType === "keys" ? keysGap : glitchGap
-    const instrumentLabel = trackType === "bass" ? "Bass" : trackType === "keys" ? "Keys" : "Drum Bus"
-
-    const stages: ChecklistStage[] = dataMap[vibe].map((s) => ({
+    const stages: ChecklistStage[] = (axisDrumStages ?? data[vibe]).map((s) => ({
       id: s.id,
       name: s.name,
-      pluginLine: s.options.map((o) => `${o.brand}: ${o.plugin}`).join("  |  "),
-      tip: s.options[0]?.tip ?? "",
+      pluginLine: s.options.length > 0
+        ? s.options.map((o) => `${o.brand}: ${o.plugin}`).join("  |  ")
+        : "Manual DAW step — no plugin insert",
+      tip: s.options[0]?.tip ?? s.note ?? "",
     }))
     return {
       chainKey: `${trackType}:${vibe}`,
-      chainLabel: `${vibeMeta?.label ?? vibe} ${instrumentLabel}`,
-      suggestedPresetName: `GHS - ${vibeMeta?.label ?? vibe} ${instrumentLabel}`,
+      chainLabel: `${vibeMeta?.label ?? vibe} ${label}`,
+      suggestedPresetName: `GHS - ${vibeMeta?.label ?? vibe} ${label}`,
       checklistStages: stages,
-      chainData: dataMap,
-      gapNote: gap,
     }
-  }, [trackType, vibe])
+  }, [trackType, vibe, axisDrumStages])
 
   return (
     <div className="min-h-screen bg-background">
@@ -153,14 +157,20 @@ export default function Home() {
             </div>
           </div>
         </div>
-
-        <div className="flex gap-2 pt-2 flex-wrap items-center">
+        <div className="flex gap-2 pt-2">
           <Button
             variant={trackType === "drums" ? "default" : "outline"}
             onClick={() => handleTrackTypeChange("drums")}
             className={cn("gap-2")}
           >
             <Music className="h-4 w-4" /> Drums
+          </Button>
+          <Button
+            variant={trackType === "vocals" ? "default" : "outline"}
+            onClick={() => handleTrackTypeChange("vocals")}
+            className={cn("gap-2")}
+          >
+            <Mic className="h-4 w-4" /> Vocals
           </Button>
           <Button
             variant={trackType === "bass" ? "default" : "outline"}
@@ -176,55 +186,31 @@ export default function Home() {
           >
             <Piano className="h-4 w-4" /> Keys
           </Button>
-          <Button
-            variant={trackType === "vocals" ? "default" : "outline"}
-            onClick={() => handleTrackTypeChange("vocals")}
-            className={cn("gap-2")}
-          >
-            <Mic className="h-4 w-4" /> Vocals
-          </Button>
-          <Button
-            variant="outline"
-            onClick={surpriseMe}
-            className="gap-2 border-fuchsia-500/50 text-fuchsia-600 hover:bg-fuchsia-500/10 ml-auto"
-          >
-            <Shuffle className="h-4 w-4" /> Random Ideas — surprise me
-          </Button>
         </div>
-      </div>
 
+        {trackType !== "vocals" && (
+          <div className="pt-3">
+            <VibePicker vibe={vibe} onVibeChange={handleVibeChange} />
+          </div>
+        )}
+      </div>
       <div className="max-w-4xl mx-auto px-6 pb-16 space-y-6">
-        {/* Primary flow: describe -> match -> active cue. */}
+        <AudioAnalyzer />
+
+        <AudioAbCompare />
+
         <PromptBuilder onMatch={handleMatch} />
+
         {hasMatched && <CompositionPromptsPanel vibe={vibe} />}
+
         {hasMatched && <DawPromptOutput vibe={vibe} trackType={trackType} rawPrompt={lastPromptText} />}
+
         <FocusCue
           chainKey={chainKey}
           chainLabel={chainLabel}
           suggestedPresetName={suggestedPresetName}
           stages={checklistStages}
         />
-
-        {/* Secondary tools: opt-in, not shown by default. */}
-        <Button
-          variant="ghost"
-          onClick={() => setShowAnalyzer((v) => !v)}
-          className="gap-2 text-muted-foreground w-full justify-center"
-        >
-          {showAnalyzer ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          {showAnalyzer ? "Hide mix analyzer" : "Analyze a mix (loudness, dynamics, muddiness)"}
-        </Button>
-        {showAnalyzer && <AudioAnalyzer />}
-
-        <Button
-          variant="ghost"
-          onClick={() => setShowAbCompare((v) => !v)}
-          className="gap-2 text-muted-foreground w-full justify-center"
-        >
-          {showAbCompare ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          {showAbCompare ? "Hide A/B compare" : "Compare your track against a reference"}
-        </Button>
-        {showAbCompare && <AudioAbCompare />}
 
         <Button
           variant="ghost"
@@ -234,9 +220,11 @@ export default function Home() {
           {showFullDetails ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           {showFullDetails ? "Hide full chain details" : "Show full chain details (all steps, all plugin options)"}
         </Button>
+
         {showFullDetails && (
           <div className="space-y-6">
             <PluginLibraryPanel onLibraryChange={setLibraryIndex} />
+
             <a
               href="/plugin-scanner.zip"
               download
@@ -245,25 +233,25 @@ export default function Home() {
               <Download className="h-4 w-4" />
               Download the local plugin scanner script (Mac + Windows)
             </a>
+
             <BuildChecklist
               chainKey={chainKey}
               chainLabel={chainLabel}
               suggestedPresetName={suggestedPresetName}
               stages={checklistStages}
             />
+
             {trackType === "vocals" ? (
               <VocalChainViewer highlightedStages={highlightedStages} libraryIndex={libraryIndex} />
             ) : (
-              chainData && (
-                <ChainViewer
-                  vibe={vibe}
-                  onVibeChange={handleVibeChange}
-                  highlightedStages={highlightedStages}
-                  libraryIndex={libraryIndex}
-                  chainData={chainData}
-                  gapNote={gapNote}
-                />
-              )
+              <ChainViewer
+                vibe={vibe}
+                chainData={nonVocalChains[trackType].data}
+                instrumentLabel={nonVocalChains[trackType].label}
+                highlightedStages={highlightedStages}
+                libraryIndex={libraryIndex}
+                stages={axisDrumStages ?? undefined}
+              />
             )}
           </div>
         )}

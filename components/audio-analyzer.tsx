@@ -1,7 +1,6 @@
 "use client"
-import type { ReactElement } from "react"
 
-import { useState, useRef, useMemo } from "react"
+import { useState, useRef, useMemo, type ReactNode } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -9,12 +8,13 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Upload, Loader2, AlertTriangle, CheckCircle, AlertCircle, Activity } from "lucide-react"
+import { Upload, Loader2, AlertTriangle, CheckCircle, AlertCircle, Activity, Music, Download } from "lucide-react"
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Tooltip } from "recharts"
 import { interpretAnalysis, severityRank, type AudioAnalysisResult, type Finding } from "@/lib/audio-interpretation"
 import { genreProfiles, defaultGenreProfile } from "@/lib/genre-profiles"
+import { shiftKeyName } from "@/lib/transpose-key"
 
-const severityStyle: Record<string, { badge: string; icon: ReactElement }> = {
+const severityStyle: Record<string, { badge: string; icon: ReactNode }> = {
   problem: { badge: "bg-red-600 text-white hover:bg-red-600", icon: <AlertCircle className="h-4 w-4" /> },
   watch: { badge: "bg-amber-500 text-white hover:bg-amber-500", icon: <AlertTriangle className="h-4 w-4" /> },
   good: { badge: "bg-emerald-600 text-white hover:bg-emerald-600", icon: <CheckCircle className="h-4 w-4" /> },
@@ -38,6 +38,9 @@ export function AudioAnalyzer() {
   const [fileName, setFileName] = useState<string | null>(null)
   const [profileId, setProfileId] = useState(defaultGenreProfile.id)
   const [airTarget, setAirTarget] = useState(defaultGenreProfile.airTargetPct)
+  const [semitones, setSemitones] = useState(0)
+  const [transposing, setTransposing] = useState(false)
+  const [transposeError, setTransposeError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const profile = genreProfiles.find((p) => p.id === profileId) ?? defaultGenreProfile
@@ -77,6 +80,42 @@ export function AudioAnalyzer() {
       setError(err instanceof Error ? err.message : "Analysis failed")
     } finally {
       setAnalyzing(false)
+    }
+  }
+
+  async function handleTranspose() {
+    const file = fileInputRef.current?.files?.[0]
+    if (!file || semitones === 0) return
+
+    setTransposing(true)
+    setTransposeError(null)
+
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
+      formData.append("semitones", String(semitones))
+      const res = await fetch("/api/transpose-audio", { method: "POST", body: formData })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || "Transpose failed")
+      }
+
+      const blob = await res.blob()
+      const disposition = res.headers.get("Content-Disposition") ?? ""
+      const nameMatch = disposition.match(/filename="([^"]+)"/)
+      const downloadName = nameMatch ? nameMatch[1] : "transposed.wav"
+
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = downloadName
+      link.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      setTransposeError(err instanceof Error ? err.message : "Transpose failed")
+    } finally {
+      setTransposing(false)
     }
   }
 
@@ -169,6 +208,40 @@ export function AudioAnalyzer() {
                 label={`Detected Key${result.key.confidence < 0.6 ? " (low confidence)" : ""}`}
                 value={result.key.detected ?? "—"}
               />
+            </div>
+
+            <div className="rounded-lg border p-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <Music className="h-4 w-4 text-violet-600" />
+                <p className="text-sm font-medium">
+                  Transpose{" "}
+                  <span className="text-muted-foreground font-normal">
+                    — shift pitch, tempo/duration unchanged
+                  </span>
+                </p>
+              </div>
+              <div className="flex items-center justify-between">
+                <Label>
+                  {semitones === 0 ? "No shift" : `${semitones > 0 ? "+" : ""}${semitones} semitone${Math.abs(semitones) === 1 ? "" : "s"}`}
+                  {semitones !== 0 && result.key.detected && (
+                    <span className="text-muted-foreground font-normal">
+                      {" "}
+                      ({result.key.detected} → {shiftKeyName(result.key.detected, semitones)})
+                    </span>
+                  )}
+                </Label>
+              </div>
+              <Slider value={[semitones]} onValueChange={([v]) => setSemitones(v)} min={-24} max={24} step={1} />
+              <Button
+                onClick={handleTranspose}
+                disabled={transposing || semitones === 0}
+                size="sm"
+                className="gap-2"
+              >
+                {transposing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                {transposing ? "Transposing..." : "Download transposed audio"}
+              </Button>
+              {transposeError && <p className="text-sm text-destructive">{transposeError}</p>}
             </div>
 
             <div>

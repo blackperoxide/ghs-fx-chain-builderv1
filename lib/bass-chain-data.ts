@@ -1,251 +1,199 @@
-import type { Vibe, ChainStage } from "./chain-data"
+import type { ChainStage, Vibe } from "./chain-data"
 
+// Same 5 vibes as the drum bus chains, reinterpreted for bass - the vibe selector
+// applies across instruments, not just drums. Stage ids intentionally reuse the
+// same ids drums already uses (transient/compression/eq/saturation/modulation/
+// glitch-fx/delay-fx/space) so stageCategoryMap needs no new entries.
 export const bassChain: Record<Vibe, ChainStage[]> = {
   "clean-glitch": [
     {
       id: "transient",
-      name: "1. Transient Shaping",
-      role: "Snap the pick/finger attack before anything else touches it",
+      name: "1. Pick/Attack Control",
+      role: "Even out pick or finger attack before compression exaggerates it",
       options: [
-        { brand: "Plugin Alliance", plugin: "SPL Transient Designer", tip: "Attack +2-3dB, Sustain -1dB — enough snap to cut through without going boomy." },
-        { brand: "UAD", plugin: "UA 1176LN Rev E (fast attack)", tip: "Light nudge if you skip SPL — fast attack, low ratio just to catch the pick transient." },
-      ],
-    },
-    {
-      id: "saturation",
-      name: "2. DI / Amp Character",
-      role: "Modern low-end push with a little harmonic edge, without losing sub",
-      options: [
-        { brand: "UAD", plugin: "Little Labs VOG (Voice Of God)", tip: "Drive lightly for that classic modern-bass DI push and harmonic edge — this is THE bass DI plugin, use it as your default here." },
-        { brand: "UAD", plugin: "Ampeg SVT3Pro", tip: "Blend in parallel at 10-20% for amp grit under the clean DI." },
-      ],
-    },
-    {
-      id: "compression",
-      name: "3. Compression",
-      role: "Keep it tight and consistent — modern bass wants control, not pump",
-      options: [
-        { brand: "UAD", plugin: "UA 1176LN Rev E", tip: "Fast attack, fast release, 4:1 — tight, modern, consistent." },
-        { brand: "Waves", plugin: "CLA-76", tip: "Alternative if UAD isn't loaded — same fast/fast approach." },
+        { brand: "UAD", plugin: "1176 Rev A/E (fast attack)", tip: "Light touch, 2-3dB GR max - this is control, not squash." },
+        { brand: "Plugin Alliance", plugin: "elysia alpha Compressor", tip: "Fast attack, auto release - keeps note-to-note dynamics tight without pumping." },
       ],
     },
     {
       id: "eq",
-      name: "4. EQ",
-      role: "Carve the mud, keep the click",
+      name: "2. Low-End Focus EQ",
+      role: "Carve room for the kick, keep the fundamental honest",
       options: [
-        { brand: "Plugin Alliance", plugin: "bx_console SSL 4000 E EQ", tip: "HP ~30Hz, small boost 700Hz-1kHz for pick click, cut 250-350Hz mud." },
+        { brand: "Plugin Alliance", plugin: "bx_console SSL 4000 E EQ", tip: "HP at 30-40Hz, small dip 250-350Hz to avoid kick clash, gentle boost 800Hz-1.2kHz for pick definition." },
+        { brand: "FabFilter", plugin: "Pro-Q 3", tip: "Dynamic EQ on 250-350Hz so the cut only kicks in when it's actually clashing." },
       ],
     },
     {
-      id: "space",
-      name: "5. Space (minimal)",
-      role: "Bass mostly stays dry — just enough for glue",
+      id: "saturation",
+      name: "3. Harmonic Edge",
+      role: "Add just enough upper harmonic content that the bass still reads on small speakers",
       options: [
-        { brand: "UAD", plugin: "EMT 140 Plate", tip: "5-8% mix only — this is glue, not ambience. Too much reverb on bass reads as mud fast." },
+        { brand: "UAD", plugin: "Ampex ATR-102", tip: "Very light drive - this is for harmonics, not tone-shaping." },
+        { brand: "Soundtoys", plugin: "Decapitator (Punish mode, low mix)", tip: "10-20% mix - a whisper of grit, not distortion." },
+      ],
+    },
+    {
+      id: "glitch-fx",
+      name: "4. Glitch Accent (subtle, optional)",
+      role: "One stutter/gate moment per phrase, on a send - matches the drum bus's restraint",
+      options: [
+        { brand: "Kilohearts", plugin: "Stutter", tip: "Low mix (15-25%), one trigger per phrase max - it should read as a wink, not a gimmick." },
+      ],
+    },
+    {
+      id: "compression-2",
+      name: "5. Bus Glue",
+      role: "Second-stage gentle leveling so the whole take sits at one consistent loudness",
+      options: [
+        { brand: "Waves", plugin: "SSL G-Master Buss Compressor", tip: "4:1, medium attack, 1-2dB GR - just enough to glue, not to flatten." },
       ],
     },
   ],
   "heavy-glitch": [
     {
       id: "transient",
-      name: "1. Transient Shaping",
-      role: "Exaggerate the hit before you smash it",
+      name: "1. Attack Shaping",
+      role: "Exaggerate the pick/pluck before saturation smashes it",
       options: [
-        { brand: "Plugin Alliance", plugin: "SPL Transient Designer", tip: "Attack +5-6dB — push it, you're about to compress hard anyway." },
+        { brand: "Plugin Alliance", plugin: "SPL Transient Designer", tip: "Attack +4-6dB - push it, the saturation stage is about to eat some of that back." },
       ],
     },
     {
       id: "saturation",
-      name: "2. Fuzz / Grind (the character stage)",
-      role: "This is where 'Deftones bass' actually lives",
+      name: "2. Heavy Saturation/Fuzz",
+      role: "This is the character stage - where the aggressive tone actually comes from",
       options: [
-        { brand: "UAD", plugin: "Thermionic Culture Vulture", tip: "Push the drive hard for fuzzed-out, aggressive harmonic distortion — the main character tool for this chain." },
-        { brand: "UAD", plugin: "Ampeg SVTVR Classic", tip: "Blend in parallel for amp-driven grind under the fuzz." },
+        { brand: "Soundtoys", plugin: "Decapitator (Thrust mode)", tip: "Drive hard, blend in parallel if the fundamental starts disappearing under the fuzz." },
+        { brand: "UAD", plugin: "Studer A800", tip: "Push input +6-8dB for real tape-compression grit before the compressor stage." },
       ],
     },
     {
       id: "compression",
       name: "3. Heavy Compression",
-      role: "Squash it flat, let it pump",
+      role: "Squash it flat, let it pump with the drum bus",
       options: [
-        { brand: "UAD", plugin: "API 2500", tip: "Ratio 4:1+, fast attack, 6-8dB GR for real pumping aggression." },
-        { brand: "Waves", plugin: "CLA-76 (all-buttons-in)", tip: "Alternative — extreme setting for max grind." },
+        { brand: "Waves", plugin: "CLA-76 (all-buttons-in, parallel blend)", tip: "Blend 40-60% wet - full NY-compression pump without losing the low end entirely." },
       ],
     },
     {
       id: "eq",
       name: "4. Aggressive EQ",
-      role: "Mid grind and aggression",
+      role: "Carve space against the distorted drum bus, keep the fundamental audible",
       options: [
-        { brand: "Plugin Alliance", plugin: "bx_console Neve 88RS", tip: "Boost 800Hz-1.2kHz hard for aggressive mid grind, HP 40-50Hz." },
+        { brand: "Plugin Alliance", plugin: "bx_console Neve 88RS", tip: "HP 50-60Hz, boost 700Hz-1kHz hard for cut-through-the-mix midrange." },
       ],
     },
     {
       id: "glitch-fx",
-      name: "5. Glitch / Stutter Send",
-      role: "Chaotic breaks on fills",
+      name: "5. Glitch/Bitcrush Send",
+      role: "Chaotic breaks matching the drum bus's fill moments",
       options: [
-        { brand: "Kilohearts", plugin: "Stutter + Bitcrush (chained)", tip: "Same combo as the heavy-glitch drum bus — fast/chaotic stutter into bitcrush on fills only." },
-      ],
-    },
-    {
-      id: "space",
-      name: "6. Space / Crush",
-      role: "Only on accented hits",
-      options: [
-        { brand: "UAD", plugin: "EMT 140 Plate", tip: "Short decay, automate the send in only on accented/chorus hits." },
+        { brand: "Kilohearts", plugin: "Stutter + Bitcrush (chained)", tip: "Same chain as the drum bus's glitch send - keep them synced so fills read as one gesture, not two." },
       ],
     },
   ],
   "psych-trip-hop": [
     {
-      id: "transient",
-      name: "1. Transient Shaping",
-      role: "Soften slightly for the laid-back pocket",
+      id: "compression",
+      name: "1. Gentle Leveling",
+      role: "Keep dynamics under control without killing the sway",
       options: [
-        { brand: "Plugin Alliance", plugin: "SPL Transient Designer", tip: "Attack neutral to -2dB, Sustain +2dB for a rounder, warmer hit." },
+        { brand: "UAD", plugin: "LA-2A (Compress mode)", tip: "Slow, musical, opto-style leveling - this shouldn't be audible as compression." },
       ],
     },
     {
       id: "saturation",
-      name: "2. Tape Warmth / Wobble",
-      role: "Matches the drum bus's wow/flutter character",
+      name: "2. Tape Warble",
+      role: "Independent wow & flutter is what actually sells 'warped' rather than just soft",
       options: [
-        { brand: "UAD", plugin: "Ampex ATR-102", tip: "Gentle drive, wow/flutter ON — pitch-drift character matching the rest of the psych chain." },
-      ],
-    },
-    {
-      id: "compression",
-      name: "3. Glue Compression",
-      role: "Smooth, musical, not squashed",
-      options: [
-        { brand: "UAD", plugin: "Fairchild 670", tip: "Stereo-linked, slow attack, 2-3dB GR — smooth glue." },
-      ],
-    },
-    {
-      id: "eq",
-      name: "4. Tone Shaping",
-      role: "Warm and dusty, not bright",
-      options: [
-        { brand: "Plugin Alliance", plugin: "bx_console SSL 4000 E EQ", tip: "Gentle low shelf boost ~80Hz, cut above 6kHz to keep it dusty." },
+        { brand: "UAD", plugin: "Ampex ATR-102", tip: "Push wow/flutter amount noticeably - this is the main character of the vibe, not a subtle touch." },
+        { brand: "Waves", plugin: "Kramer Tape", tip: "Alternative/parallel layer for extra hiss and drift underneath." },
       ],
     },
     {
       id: "modulation",
-      name: "5. Filter Movement",
-      role: "Subtle psychedelic motion",
+      name: "3. Filtered Movement",
+      role: "Slow filter sweep for the sense of something breathing under the mix",
       options: [
-        { brand: "UAD", plugin: "Moog Multimode Filter", tip: "Slow LFO sweep, low resonance, subtle — on a parallel bus so the fundamental stays solid." },
+        { brand: "UAD", plugin: "Moog Multimode Filter", tip: "Slow LFO on cutoff, subtle depth - a wash, not a wobble-bass effect." },
       ],
     },
     {
-      id: "delay-fx",
-      name: "6. Delay (texture only)",
-      role: "Bass rarely wants big throws — keep this subtle",
+      id: "eq",
+      name: "4. Low-Pass Warmth",
+      role: "Roll off the top so the bass sits hazy and back in the mix",
       options: [
-        { brand: "FabFilter", plugin: "Timeless 2", tip: "Very subtle, filtered, low mix — texture, not a feature." },
+        { brand: "FabFilter", plugin: "Pro-Q 3 (gentle low-pass)", tip: "Roll off above 3-4kHz - let the saturation stage's harmonics be the only 'top end' this bass has." },
       ],
     },
     {
       id: "space",
-      name: "7. Space",
-      role: "Hazy but controlled — keep the sub centered",
+      name: "5. Wide, Low Space",
+      role: "A hint of room so the bass feels like it's inside the same hazy space as everything else",
       options: [
-        { brand: "UAD", plugin: "Capitol Chambers", tip: "Longer decay is fine, but keep the mix very low (5-10%) so the sub stays mono and centered." },
+        { brand: "UAD", plugin: "EMT 140 Plate", tip: "Very low mix (5-10%), long pre-delay - felt more than heard." },
       ],
     },
   ],
   "neo-soul-triphop": [
     {
-      id: "transient",
-      name: "1. Transient Shaping",
-      role: "Round it off for that Questlove-pocket fatness",
-      options: [
-        { brand: "Plugin Alliance", plugin: "SPL Transient Designer", tip: "Attack -2 to -3dB, Sustain +2dB for a fat, rounded low end." },
-      ],
-    },
-    {
-      id: "saturation",
-      name: "2. Warm Amp Character",
-      role: "Fingerstyle warmth, Rhodes-adjacent",
-      options: [
-        { brand: "UAD", plugin: "Ampeg SVTVR Classic", tip: "Blend low for warm tube amp character." },
-        { brand: "UAD", plugin: "Ampex ATR-102", tip: "Alternative — light tape warmth instead of amp grit." },
-      ],
-    },
-    {
       id: "compression",
-      name: "3. Pocket Glue",
-      role: "Smooth glue that keeps the groove deep in the pocket",
+      name: "1. Pocket Compression",
+      role: "Even, felt leveling that locks the bass into the pocket with the drums",
       options: [
-        { brand: "UAD", plugin: "Fairchild 670", tip: "Slow attack, 2-3dB GR, classic smooth-soul glue." },
-        { brand: "UAD", plugin: "Teletronix LA-2A Silver", tip: "Alternative — even smoother, more vintage character." },
+        { brand: "UAD", plugin: "LA-2A (Limit mode)", tip: "Slow attack, natural release - the classic warm-bass-in-the-pocket setting." },
       ],
     },
     {
       id: "eq",
-      name: "4. Warm Body EQ",
-      role: "Thick, not muddy",
+      name: "2. Round, Warm EQ",
+      role: "Full, round low end without mud - the D'Angelo/Questlove low end this vibe is built on",
       options: [
-        { brand: "Plugin Alliance", plugin: "bx_console Neve 88RS", tip: "Boost 150-250Hz for body, dip 400Hz to avoid boxiness, soft top roll-off above 7kHz." },
+        { brand: "Plugin Alliance", plugin: "bx_console SSL 4000 E EQ", tip: "Gentle boost 80-120Hz for weight, small dip 300-400Hz to avoid boxiness." },
       ],
     },
     {
-      id: "modulation",
-      name: "5. Subtle Shimmer",
-      role: "Barely-there movement",
+      id: "saturation",
+      name: "3. Tube/Tape Warmth",
+      role: "Soft harmonic saturation - the 'felt not heard' warmth that ties this vibe together",
       options: [
-        { brand: "Waves", plugin: "MondoMod", tip: "Very low depth, slow rate — should be felt, not noticed." },
+        { brand: "UAD", plugin: "Studer A800", tip: "Light drive only - this should round the note off, not add grit." },
       ],
     },
     {
-      id: "space",
-      name: "6. Space",
-      role: "Warm room, groove stays grounded",
+      id: "modulation-vocal",
+      name: "4. Subtle Chorus (optional)",
+      role: "A touch of width/movement if the bass feels too static against the Rhodes",
       options: [
-        { brand: "UAD", plugin: "Capitol Chambers", tip: "Short-medium decay (0.8-1.2s), low-passed return." },
+        { brand: "Soundtoys", plugin: "PhaseMistress", tip: "Very slow rate, low depth - width, not a phaser effect." },
       ],
     },
   ],
   "live-organic": [
     {
-      id: "transient",
-      name: "1. Light Transient Touch",
-      role: "Keep it natural",
-      options: [
-        { brand: "Plugin Alliance", plugin: "SPL Transient Designer", tip: "Very light — +1dB attack max." },
-      ],
-    },
-    {
       id: "compression",
-      name: "2. Gentle Compression",
-      role: "Control dynamics without squashing feel",
+      name: "1. Light Leveling",
+      role: "Just enough to keep a live take consistent - nothing that reads as 'compressed'",
       options: [
-        { brand: "Waves", plugin: "CLA-76 (light setting)", tip: "4:1, 2-3dB GR max — keep it natural." },
+        { brand: "UAD", plugin: "LA-2A (Compress mode, light)", tip: "1-3dB GR max - this is safety net compression for a live/busking context, not a tone tool." },
       ],
     },
     {
       id: "eq",
-      name: "3. EQ for Live Cut-Through",
-      role: "Carve space to cut through outdoors",
+      name: "2. Natural EQ",
+      role: "Clean up the room/DI without changing the character of the instrument",
       options: [
-        { brand: "Plugin Alliance", plugin: "bx_console Neve 88RS", tip: "HP 50Hz, gentle presence boost 1-2kHz." },
+        { brand: "FabFilter", plugin: "Pro-Q 3", tip: "HP below 40Hz to remove handling/room rumble, otherwise leave it alone." },
       ],
     },
     {
       id: "space",
-      name: "4. Minimal Room",
-      role: "Amp-spring character reads more natural outdoors than a plate",
+      name: "3. Minimal Room (optional)",
+      role: "Only if the DI/pickup sounds too dry and dead for the room the rest of the mix implies",
       options: [
-        { brand: "UAD", plugin: "AKG BX 20", tip: "Very low mix (5%) — classic spring reverb character for a live/busking feel." },
+        { brand: "UAD", plugin: "Capitol Chambers", tip: "Very low mix (5-8%) - just enough to sound like it's in a room, not a hall." },
       ],
     },
   ],
-}
-
-export const bassGap = {
-  title: "One spot your rig doesn't fully cover",
-  body:
-    "None of your main brands ship a dedicated sub/low-end harmonic exciter (like Waves MaxxBass). If bass feels thin on small speakers after this chain, the Little Labs VOG drive stage and the Ampeg amp blend above are your main tools for translating low end on phone/laptop speakers — worth picking up a dedicated bass enhancer later if this keeps coming up.",
 }

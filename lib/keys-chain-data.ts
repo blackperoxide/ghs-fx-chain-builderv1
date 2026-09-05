@@ -1,214 +1,166 @@
-import type { Vibe, ChainStage } from "./chain-data"
+import type { ChainStage, Vibe } from "./chain-data"
 
+// Same 5 vibes as the drum bus and bass chains, reinterpreted for keys/Rhodes/EP -
+// the vibe selector applies across instruments. Stage ids reuse the ids drums/bass
+// already use so stageCategoryMap needs no new entries.
 export const keysChain: Record<Vibe, ChainStage[]> = {
   "clean-glitch": [
     {
-      id: "compression",
-      name: "1. Compression",
-      role: "Even out dynamics for a tight, modern part",
-      options: [
-        { brand: "Waves", plugin: "CLA-76", tip: "3:1, moderate attack — keeps it consistent without squashing feel." },
-        { brand: "UAD", plugin: "API 2500", tip: "Alternative — a touch more glue if the part is busy." },
-      ],
-    },
-    {
       id: "eq",
-      name: "2. EQ",
-      role: "Clarity, and get out of the bass's way",
+      name: "1. Bright, Tight EQ",
+      role: "Clean, modern tone - present without being harsh",
       options: [
-        { brand: "Plugin Alliance", plugin: "bx_console SSL 4000 E EQ", tip: "HP 80-100Hz to keep low end from clashing with bass, gentle high shelf boost for clarity." },
+        { brand: "FabFilter", plugin: "Pro-Q 3", tip: "Gentle boost 3-5kHz for clarity, HP below 80Hz to keep it out of the bass's way." },
+        { brand: "Plugin Alliance", plugin: "bx_console SSL 4000 E EQ", tip: "Small presence boost, nothing dramatic - this vibe is about control, not color." },
       ],
     },
     {
-      id: "modulation",
-      name: "3. Width (subtle)",
-      role: "Barely-there width, not a chorus effect",
+      id: "compression",
+      name: "2. Controlled Compression",
+      role: "Even out dynamics so nothing jumps out of the mix",
       options: [
-        { brand: "Waves", plugin: "MondoMod", tip: "Very light chorus blend, low depth — keep it modern and tight, not swirly." },
+        { brand: "Waves", plugin: "Renaissance Compressor", tip: "Medium attack/release, 2-3dB GR - transparent, not pumping." },
       ],
     },
     {
-      id: "space",
-      name: "4. Space",
-      role: "Present and polished",
+      id: "glitch-fx",
+      name: "3. Glitch Accent (subtle, optional)",
+      role: "One stutter/reverse moment per phrase, matching the drum bus's restraint",
       options: [
-        { brand: "UAD", plugin: "EMT 140 Plate", tip: "Short decay, low-medium mix for a present, modern sound." },
+        { brand: "Kilohearts", plugin: "Stutter", tip: "Low mix, tempo-synced - an accent on a phrase-ending chord, not a constant effect." },
       ],
     },
   ],
   "heavy-glitch": [
     {
       id: "saturation",
-      name: "1. Crush / Grit (the character stage)",
-      role: "Crushed, aggressive digital stab character",
+      name: "1. Bitcrush/Saturation",
+      role: "This is the character stage - aggressive, degraded tone",
       options: [
-        { brand: "Kilohearts", plugin: "Bitcrush", tip: "Push hard for a crushed, lo-fi digital stab character." },
-        { brand: "UAD", plugin: "Thermionic Culture Vulture", tip: "Alternative — analog-flavored grit instead of digital crush." },
+        { brand: "Kilohearts", plugin: "Bitcrush", tip: "Reduce bit depth/sample rate noticeably - this should sound broken on purpose." },
+        { brand: "Soundtoys", plugin: "Decapitator (Punish mode)", tip: "Alternative/parallel layer for more analog-flavored grit instead of digital crush." },
       ],
     },
     {
       id: "compression",
-      name: "2. Compression",
-      role: "Squash it for an in-your-face stab",
+      name: "2. Heavy Compression",
+      role: "Squash it to match the aggression of the drum bus and bass",
       options: [
-        { brand: "UAD", plugin: "API 2500", tip: "Fast attack, aggressive GR — squashed and upfront." },
+        { brand: "Waves", plugin: "CLA-76 (all-buttons-in)", tip: "Fast attack/release, push hard - let it pump with the rest of the mix." },
       ],
     },
     {
-      id: "eq",
-      name: "3. Aggressive EQ",
-      role: "Presence and aggression",
+      id: "modulation",
+      name: "3. Chaotic Modulation",
+      role: "Unstable movement - filter chokes, erratic rate changes",
       options: [
-        { brand: "Plugin Alliance", plugin: "bx_console Neve 88RS", tip: "Boost 2-4kHz for aggressive presence, HP 100Hz." },
+        { brand: "Kilohearts", plugin: "Frequency Shifter", tip: "Fast, irregular rate - deliberately unmusical for a few beats at a time." },
       ],
     },
     {
       id: "glitch-fx",
-      name: "4. Stutter",
-      role: "Chopped, chaotic stab rhythms on fills",
+      name: "4. Glitch/Stutter Send",
+      role: "Same chaos as the drum bus's fills, kept in sync",
       options: [
-        { brand: "Kilohearts", plugin: "Stutter", tip: "Chain before Bitcrush for chopped, bar-synced chaos on fills." },
-      ],
-    },
-    {
-      id: "space",
-      name: "5. Space",
-      role: "Tight, low mix so the crush stays upfront",
-      options: [
-        { brand: "UAD", plugin: "EMT 140 Plate", tip: "Short decay, low mix — the crush should stay in your face, not washed out." },
+        { brand: "Kilohearts", plugin: "Stutter + Bitcrush (chained)", tip: "Match the drum bus's glitch send settings so fills read as one coordinated hit." },
       ],
     },
   ],
   "psych-trip-hop": [
     {
-      id: "saturation",
-      name: "1. Tape Warmth",
-      role: "Matches the drum bus's wow/flutter character",
+      id: "tape-warble",
+      name: "1. Tape Warble",
+      role: "Wow & flutter is the core of a warped/hazy EP sound",
       options: [
-        { brand: "UAD", plugin: "Ampex ATR-102", tip: "Gentle drive, wow/flutter on for pitch-drift matching the rest of the chain." },
-      ],
-    },
-    {
-      id: "compression",
-      name: "2. Glue Compression",
-      role: "Smooth, musical",
-      options: [
-        { brand: "UAD", plugin: "Fairchild 670", tip: "Slow attack, 2dB GR glue." },
-      ],
-    },
-    {
-      id: "eq",
-      name: "3. Tone Shaping",
-      role: "Warm and dusty",
-      options: [
-        { brand: "Plugin Alliance", plugin: "bx_console SSL 4000 E EQ", tip: "Low shelf warmth boost, cut above 8kHz for dusty top end." },
+        { brand: "UAD", plugin: "Ampex ATR-102", tip: "Push wow/flutter amount - this is the main character of the vibe." },
+        { brand: "Waves", plugin: "Kramer Tape", tip: "Alternative/parallel layer for extra hiss and drift." },
       ],
     },
     {
       id: "modulation",
-      name: "4. Swirl (the signature move on keys)",
-      role: "This is the psychedelic character stage for this instrument",
+      name: "2. Chorus/Phaser",
+      role: "Classic EP movement - width and slow drift",
       options: [
-        { brand: "Waves", plugin: "MondoMod", tip: "Slow rate, moderate depth phaser/chorus blend — this is where the vibe really lives on keys." },
+        { brand: "Soundtoys", plugin: "PhaseMistress", tip: "Slow rate, moderate depth - a wide, slow-breathing phase sweep." },
+        { brand: "UAD", plugin: "Moog Multimode Filter", tip: "Alternative - a slow filter sweep instead of/in addition to phasing." },
       ],
     },
     {
       id: "delay-fx",
-      name: "5. Delay Throws",
-      role: "Washy transition tails",
+      name: "3. Modulated Delay",
+      role: "Wide, hazy repeats that blur into the space rather than sitting as distinct echoes",
       options: [
-        { brand: "FabFilter", plugin: "Timeless 2", tip: "Dotted-8th, filtered ping-pong repeats — automate a throw at phrase ends." },
+        { brand: "FabFilter", plugin: "Timeless 2", tip: "Long feedback, filtered repeats, subtle pitch/time modulation on the delay line itself." },
       ],
     },
     {
       id: "space",
-      name: "6. Space",
-      role: "Wide, hazy wash",
+      name: "4. Wide, Modulated Reverb",
+      role: "Glue the keys into the same hazy space as the rest of the mix",
       options: [
-        { brand: "UAD", plugin: "Capitol Chambers", tip: "Long decay (2-2.5s), heavy pre-delay, hazy back wall." },
+        { brand: "Eventide", plugin: "Blackhole", tip: "Long, diffuse, modulated - this should feel like it's dissolving into the mix." },
       ],
     },
   ],
   "neo-soul-triphop": [
     {
-      id: "saturation",
-      name: "1. Rhodes Warmth",
-      role: "Classic Rhodes-through-tape character",
+      id: "modulation-vocal",
+      name: "1. Classic Tremolo/Chorus",
+      role: "The Rhodes-warm movement this whole vibe is built around",
       options: [
-        { brand: "UAD", plugin: "Ampex ATR-102", tip: "Gentle drive, subtle flutter — just enough for that analog EP warmth." },
+        { brand: "Soundtoys", plugin: "Tremolator", tip: "Medium rate, moderate depth - the classic Rhodes tremolo, present but not distracting." },
+        { brand: "UAD", plugin: "Moog Multimode Filter", tip: "Alternative - subtle envelope-following filter movement instead of tremolo." },
+      ],
+    },
+    {
+      id: "saturation",
+      name: "2. Tube Warmth",
+      role: "Soft harmonic saturation - the felt-not-heard warmth D'Angelo/Questlove-style keys live in",
+      options: [
+        { brand: "UAD", plugin: "Studer A800", tip: "Light drive only - roundness, not grit." },
       ],
     },
     {
       id: "compression",
-      name: "2. Compression",
-      role: "Gentle glue that doesn't kill dynamics",
+      name: "3. Pocket Compression",
+      role: "Even, musical leveling that locks the keys into the pocket with the bass and drums",
       options: [
-        { brand: "UAD", plugin: "Teletronix LA-2A Silver", tip: "Slow/smooth — classic opto glue for keys." },
-      ],
-    },
-    {
-      id: "eq",
-      name: "3. Warm Body EQ",
-      role: "Warm low-mid, gentle presence",
-      options: [
-        { brand: "Plugin Alliance", plugin: "bx_console Neve 88RS", tip: "Boost ~200-300Hz for body, gentle presence around 3kHz, soft top roll-off." },
-      ],
-    },
-    {
-      id: "modulation",
-      name: "4. Rhodes Tremolo (the signature move)",
-      role: "The D'Angelo-era vibrato character",
-      options: [
-        { brand: "Waves", plugin: "MondoMod", tip: "Moderate rate, classic tremolo/chorus blend — this mimics the Rhodes' own built-in vibrato circuit." },
+        { brand: "UAD", plugin: "LA-2A (Limit mode)", tip: "Slow, natural - the same warm-glue setting the bass chain uses, for cohesion." },
       ],
     },
     {
       id: "delay-fx",
-      name: "5. Delay (sparse)",
-      role: "Only on transition moments",
+      name: "4. Tasteful Delay Throws",
+      role: "Sparse, analog-flavored throws on chord changes - ear candy, not a wash",
       options: [
-        { brand: "FabFilter", plugin: "Timeless 2", tip: "Sparse, filtered — used only at section transitions, not constantly." },
-      ],
-    },
-    {
-      id: "space",
-      name: "6. Space",
-      role: "Warm and close, not washy",
-      options: [
-        { brand: "UAD", plugin: "Capitol Chambers", tip: "Medium decay (1-1.5s) — keep it warm and close, not spacious." },
+        { brand: "Waves", plugin: "H-Delay", tip: "Synced 1/8 or dotted-1/8, low feedback, automate in only on chord changes." },
       ],
     },
   ],
   "live-organic": [
     {
-      id: "compression",
-      name: "1. Gentle Compression",
-      role: "Natural dynamics",
+      id: "eq",
+      name: "1. Natural EQ",
+      role: "Clean up the room/mic without changing the instrument's real character",
       options: [
-        { brand: "Waves", plugin: "CLA-76 (light setting)", tip: "Gentle — keep the natural feel of a live/acoustic part." },
+        { brand: "FabFilter", plugin: "Pro-Q 3", tip: "HP below 40-50Hz for rumble only - otherwise leave the natural tone alone." },
       ],
     },
     {
-      id: "eq",
-      name: "2. EQ",
-      role: "Clean and present",
+      id: "compression",
+      name: "2. Light Leveling",
+      role: "Just enough for a live take to sit consistently - shouldn't be audible",
       options: [
-        { brand: "Plugin Alliance", plugin: "bx_console Neve 88RS", tip: "HP 60-80Hz, light presence boost." },
+        { brand: "UAD", plugin: "LA-2A (Compress mode, light)", tip: "1-3dB GR max - safety net compression for a live/busking context." },
       ],
     },
     {
       id: "space",
-      name: "3. Minimal Space",
-      role: "Natural, unprocessed feel for a solo/duo set",
+      name: "3. Minimal Room",
+      role: "A believable sense of the real room the instrument was played in",
       options: [
-        { brand: "UAD", plugin: "AKG BX 20", tip: "Very low mix (5-8%) — natural spring character suited to a live set." },
+        { brand: "UAD", plugin: "Capitol Chambers", tip: "Low mix, natural decay - this should sound like a room, not an effect." },
       ],
     },
   ],
-}
-
-export const keysGap = {
-  title: "Worth knowing before you use this chain",
-  body:
-    "This assumes you're processing a real Rhodes, a keys VST, or a sampled EP already recorded in the track — none of your four main brands include a dedicated Rhodes/EP simulator instrument (that's synthesis, not FX processing). The 'Rhodes vibrato' character in the neo-soul and psych chains above is added entirely through the modulation stage (MondoMod), mimicking the instrument's own built-in tremolo circuit rather than modeling the instrument itself.",
 }
