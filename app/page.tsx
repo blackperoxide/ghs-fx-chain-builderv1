@@ -117,47 +117,47 @@ export default function Home() {
               resumable right where you left off.
             </p>
           </div>
-          <div className="flex flex-col gap-2 items-end">
+          <div className="flex flex-col gap-2 items-start sm:items-end w-full sm:w-auto">
             <Link
               href="/roadmap"
-              className="flex items-center gap-2 text-sm border-2 border-indigo-500/50 rounded-lg px-3 py-2 hover:bg-accent transition-colors whitespace-nowrap font-medium"
+              className="flex items-center gap-2 text-sm border-2 border-indigo-500/50 rounded-lg px-3 py-2 hover:bg-accent transition-colors font-medium max-w-full"
             >
-              <Map className="h-4 w-4 text-indigo-600" />
-              Song Roadmap — start here if lost
+              <Map className="h-4 w-4 text-indigo-600 shrink-0" />
+              <span className="min-w-0">Song Roadmap — start here if lost</span>
             </Link>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2 justify-start sm:justify-end">
               <Link
                 href="/sketch"
-                className="flex items-center gap-2 text-sm border rounded-lg px-3 py-2 hover:bg-accent transition-colors whitespace-nowrap"
+                className="flex items-center gap-2 text-sm border rounded-lg px-3 py-2 hover:bg-accent transition-colors"
               >
-                <Zap className="h-4 w-4 text-violet-600" />
+                <Zap className="h-4 w-4 text-violet-600 shrink-0" />
                 Custom Sketch
               </Link>
               <Link
                 href="/hardware"
-                className="flex items-center gap-2 text-sm border rounded-lg px-3 py-2 hover:bg-accent transition-colors whitespace-nowrap"
+                className="flex items-center gap-2 text-sm border rounded-lg px-3 py-2 hover:bg-accent transition-colors"
               >
-                <Sliders className="h-4 w-4 text-teal-600" />
+                <Sliders className="h-4 w-4 text-teal-600 shrink-0" />
                 Hardware Setup
               </Link>
               <Link
                 href="/key-detector"
-                className="flex items-center gap-2 text-sm border rounded-lg px-3 py-2 hover:bg-accent transition-colors whitespace-nowrap"
+                className="flex items-center gap-2 text-sm border rounded-lg px-3 py-2 hover:bg-accent transition-colors"
               >
-                <Activity className="h-4 w-4 text-teal-600" />
+                <Activity className="h-4 w-4 text-teal-600 shrink-0" />
                 Live Key Detector
               </Link>
               <Link
                 href="/reverse-engineer"
-                className="flex items-center gap-2 text-sm border rounded-lg px-3 py-2 hover:bg-accent transition-colors whitespace-nowrap"
+                className="flex items-center gap-2 text-sm border rounded-lg px-3 py-2 hover:bg-accent transition-colors"
               >
-                <Layers className="h-4 w-4 text-orange-600" />
+                <Layers className="h-4 w-4 text-orange-600 shrink-0" />
                 Stem Reverse-Engineer
               </Link>
             </div>
           </div>
         </div>
-        <div className="flex gap-2 pt-2">
+        <div className="flex flex-wrap gap-2 pt-2">
           <Button
             variant={trackType === "drums" ? "default" : "outline"}
             onClick={() => handleTrackTypeChange("drums")}
